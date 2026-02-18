@@ -1,0 +1,450 @@
+digraph coppermind_run {
+    // ─── Pipeline Configuration ──────────────────────────────────────
+    goal = "Build a personal idea and task management system (Coppermind) as macOS and iOS apps using SwiftUI and SwiftData. The system auto-categorizes notes into four categories: Ideas (ruminations and reflections), Tasks (things to do), Projects (fun personal project ideas), and Bucket (links, things to buy, things to read, places to visit). Related notes are grouped together with cross-category connections. A priority ranking system floats important items (especially tasks) to the top. Audio recording with speech-to-text transcription lets the user speak notes and edit the transcript. Both apps must be fully functional — every UI element wired, every button working, every engine producing correct results."
+    label = "Coppermind Attractor Run"
+    default_max_retry = 3
+
+    // ─── Model Stylesheet ────────────────────────────────────────────
+    // Keys: provider, model (NOT llm_provider / llm_model)
+    // Do NOT set reasoning_effort — causes signature errors on multi-turn
+    model_stylesheet = "
+        * { provider = \"anthropic\"; model = \"claude-sonnet-4-6\" }
+        .opus  { provider = \"anthropic\"; model = \"claude-opus-4-6\" }
+        .codex { provider = \"openai\";    model = \"codex-5.2\";  reasoning_effort = \"high\" }
+        .gpt   { provider = \"openai\";    model = \"gpt-5.2\";   reasoning_effort = \"high\" }
+    "
+
+    // ─── Defaults ────────────────────────────────────────────────────
+    node [shape=box, timeout="900s"]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  TERMINALS
+    // ═══════════════════════════════════════════════════════════════════
+    start [shape=Mdiamond, label="Start"]
+    exit  [shape=Msquare,  label="Exit"]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  PHASE 1: ORIENT & PLAN (Claude Opus 4.6)
+    //  Assess what already exists, identify gaps vs requirements,
+    //  draft a plan, interview the user for clarity.
+    //
+    //  Artifacts:
+    //    logs/orient/ORIENT-{N}.md — codebase assessment and gap analysis
+    //    logs/plan/PLAN-{N}.md     — implementation plan
+    //
+    //  Resumability: orient and plan read prior artifacts from all phases
+    //  to understand what has already been attempted and completed.
+    // ═══════════════════════════════════════════════════════════════════
+
+    orient [
+        class="opus",
+        label="Orient: Assess Codebase & Gap Analysis",
+        prompt="Read the Coppermind project to understand the current state. Goal: $goal
+
+Explore thoroughly:
+1. Project structure — Package.swift, targets, build system, entry points
+2. Models — Note, Connection, AudioRecording, NoteGroup. Check property names, relationships, SwiftData annotations
+3. Engines — CategorizationEngine, ConnectionEngine, ClusterEngine, PriorityRanker, AudioPipeline. Read each implementation
+4. ViewModels — NoteEditorViewModel, NoteListViewModel, DashboardViewModel, AudioCaptureViewModel
+5. macOS views — CoppermindMacApp, SidebarView, NoteListView, NoteDetailView, ConnectionsPanelView, QuickCaptureView
+6. iOS views — CoppermindIOSApp, HomeView, CategoryTabView, IOSNoteDetailView, AudioCaptureOverlayView
+7. Tests — all test files in CoppermindTests/
+8. Known issues in README.md
+9. Git log for recent commits and context
+
+Check for prior run artifacts:
+- If logs/orient/ORIENT-*.md exists, read the latest — you are re-orienting after a pipeline loop. Note what changed since the last orientation.
+- If logs/implement/PROGRESS-*.md exists, read the latest — these are completed work items. Do NOT re-plan work that is already done.
+- If logs/validate/VALIDATION-RUN-*.md exists, read the latest — these are known failures to address.
+
+Produce a gap analysis comparing what EXISTS vs what is REQUIRED:
+
+Requirements checklist:
+- [ ] Four categories (Ideas, Tasks, Projects, Bucket) correctly classified
+- [ ] Related notes grouped together with cross-category connections
+- [ ] Priority ranking floats tasks and urgent items to the top
+- [ ] Audio recording with speech-to-text transcription
+- [ ] Editable transcription text after recording
+- [ ] macOS app: all UI elements wired, buttons functional, audio trigger present
+- [ ] iOS app: all UI elements wired, create-note button exists, audio capture works
+- [ ] Categorization engine handles edge cases (buy groceries = bucket, not task)
+- [ ] All engines produce correct results
+- [ ] Tests pass (swift build --target CoppermindTests && swift test --skip-build)
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+
+Write to logs/orient/ORIENT-{N}.md where N is the next sequential number (start at 1). Include:
+- Codebase assessment
+- What has already been completed (from prior PROGRESS logs)
+- What remains to be done
+- What failed in prior validation (if any)"
+    ]
+
+    plan [
+        class="opus",
+        label="Plan: Fix Gaps & Complete Features",
+        prompt="Read the latest logs/orient/ORIENT-*.md for the gap analysis.
+
+Check for prior run artifacts:
+- If logs/plan/PLAN-*.md exists, read the latest — you are replanning. Understand what was tried before.
+- If logs/implement/PROGRESS-*.md exists, read the latest — skip work items marked DONE.
+- If logs/validate/VALIDATION-RUN-*.md exists, read the latest — you are replanning to fix failures identified in that run. Focus the plan on addressing those specific failures.
+- If logs/critique/CRITIQUE-PARETO-*.md exists, read the latest — incorporate MUST FIX and SHOULD FIX items.
+
+Create an implementation plan to bring Coppermind to a fully functional state. Goal: $goal
+
+The plan must address every gap identified in the orientation. Prioritize:
+
+1. **Critical fixes** — things that prevent the app from working at all
+   - iOS missing create-note button
+   - macOS missing audio recording trigger
+   - Build errors if any
+
+2. **Categorization accuracy** — the engine must correctly classify:
+   - Ideas: reflections, thoughts, musings, what-if scenarios
+   - Tasks: actionable items with verbs (call, email, fix, build, schedule)
+   - Projects: multi-step personal projects, app ideas, hobby plans
+   - Bucket: links, purchases, reading lists, travel destinations, wishlists
+   - Edge case: 'buy groceries' is bucket (shopping), not task
+
+3. **Connection & grouping** — notes with shared themes cluster together
+   - Cross-category connections (a task related to a project)
+   - Group naming from shared keywords
+
+4. **Priority ranking** — composite score with:
+   - Tasks always rank highest as a category
+   - Overdue tasks get urgency boost
+   - Pinned/starred items get boost
+   - Recent items rank higher than stale ones
+   - Connected items (hubs) get slight boost
+
+5. **Audio pipeline** — end-to-end working:
+   - Record audio via microphone
+   - Transcribe using Apple Speech framework
+   - Auto-categorize the transcription
+   - Allow editing the transcription text
+   - Both platforms must have UI to trigger recording
+
+6. **Platform UI completeness**
+   - macOS: all sidebar groups work, filtering, sorting, detail editing, connections panel, audio button
+   - iOS: home feed, category tabs, note creation, note editing, audio overlay, connections
+
+For each plan item:
+- Exact files to create or modify (full paths)
+- What changes and why
+- How to verify it works
+- Prior work summary — what is already done and does NOT need reimplementation
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+
+Write the plan to logs/plan/PLAN-{N}.md where N is the next sequential number."
+    ]
+
+    interview [
+        shape=hexagon,
+        label="Review plan & clarify requirements"
+    ]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  PHASE 2: BREAK DOWN (Claude Opus 4.6)
+    //  Decompose into single-commit chunks, each with a QA plan.
+    //
+    //  Artifacts:
+    //    logs/breakdown/BREAKDOWN-{N}.md — commit-by-commit work plan
+    //
+    //  Resumability: reads prior progress logs to exclude completed work.
+    // ═══════════════════════════════════════════════════════════════════
+
+    breakdown [
+        class="opus",
+        label="Break Down: Commit Chunks",
+        prompt="Read the latest logs/plan/PLAN-*.md.
+
+If logs/implement/PROGRESS-*.md exists, read the latest. Commits marked DONE in the progress log should be EXCLUDED from this breakdown — they are already implemented. Only break down remaining work.
+
+Break the implementation into single-commit chunks. Each commit must:
+1. Be independently buildable — swift build --target CoppermindCore --target CoppermindMac succeeds after this commit
+2. Be independently testable — tests verify the change
+3. Have a clear description of what changes and why
+4. List the exact files to create or modify
+5. Include a QA plan:
+   - Build verification: swift build --target CoppermindCore --target CoppermindMac
+   - Test command: swift build --target CoppermindTests && swift test --skip-build
+   - Manual verification steps
+
+Suggested commit ordering (foundations first):
+1. Model fixes — any property/relationship corrections
+2. Engine fixes — categorization accuracy, connection logic, priority scoring
+3. ViewModel wiring — connect engines to UI state
+4. macOS UI — wire all buttons, add audio trigger, fix missing interactions
+5. iOS UI — add create button, wire audio overlay, fix navigation
+6. Tests — add/fix tests for all engine changes
+7. Integration — end-to-end verification
+
+Review against the plan:
+- Every plan item maps to at least one commit
+- Commits ordered by dependency
+- No oversized commits
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+
+Write the breakdown to logs/breakdown/BREAKDOWN-{N}.md where N is the next sequential number."
+    ]
+
+    review_breakdown [
+        shape=hexagon,
+        label="Review breakdown alignment"
+    ]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  PHASE 3: IMPLEMENT (OpenAI Codex)
+    //  Execute the breakdown commit by commit. Write a progress log
+    //  after each commit so the pipeline can resume if interrupted.
+    //
+    //  Artifacts:
+    //    logs/implement/PROGRESS-{N}.md — per-commit status tracking
+    //
+    //  Resumability: reads prior progress logs to skip completed commits.
+    // ═══════════════════════════════════════════════════════════════════
+
+    implement [
+        class="codex",
+        label="Implement: Commit by Commit",
+        timeout="1800s",
+        prompt="Read the latest logs/breakdown/BREAKDOWN-*.md.
+
+If logs/implement/PROGRESS-*.md exists, read the latest. Skip any commits marked DONE — they are already implemented. Resume from the first commit marked TODO or FAILED.
+
+For each commit in the breakdown:
+1. Read the commit description, file list, and QA plan
+2. Implement the code changes
+3. Run the QA plan:
+   - swift build --target CoppermindCore --target CoppermindMac
+   - swift build --target CoppermindTests && swift test --skip-build
+4. If the build or tests fail, fix the issue before moving on
+5. IMMEDIATELY after each commit, append its status to the progress log
+
+Key implementation notes:
+- SwiftData models use @Model macro — be careful with property wrappers
+- iOS target uses iOS-only APIs — do not break macOS compilation
+- Audio recording uses AVAudioEngine and Apple Speech framework
+- Categorization must handle the task-vs-bucket ambiguity (check bucket keywords BEFORE task verbs for shopping/purchase patterns)
+- Priority scoring formula: base_category_score + overdue_bonus + connection_bonus + pin_bonus + recency_factor
+- Connection discovery uses keyword overlap — minimum 2 shared significant words
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+IMPORTANT: All file references must use explicit paths from the repo root.
+
+Progress log format — write to logs/implement/PROGRESS-{N}.md where N matches the BREAKDOWN number:
+
+```markdown
+# Implementation Progress — Run {N}
+
+## Commit 1: [title from breakdown]
+- **Status**: DONE | FAILED | SKIPPED
+- **Files modified**: [list]
+- **Build result**: PASS | FAIL (error summary if fail)
+- **Test result**: PASS | FAIL (error summary if fail)
+- **Notes**: [any issues encountered]
+
+## Commit 2: [title]
+...
+
+## Summary
+- **Total commits**: X
+- **Done**: X
+- **Failed**: X
+- **Skipped**: X
+- **Final build**: PASS | FAIL
+- **Final tests**: PASS | FAIL
+```
+
+Write the progress log incrementally — update it after EACH commit, not all at once at the end. This ensures the pipeline can resume from the last successful commit if interrupted.
+
+After all commits, run a final full build and test. Append a summary section to the progress log."
+    ]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  PHASE 4: VALIDATE (Claude Opus 4.6)
+    //  Run QA validation — test both platforms, all features.
+    //  On failure, loop back to plan for fixes.
+    //
+    //  Artifacts:
+    //    logs/validate/VALIDATION-RUN-{N}.md — test matrix and results
+    //
+    //  Resumability: reads prior validation runs to track regressions.
+    // ═══════════════════════════════════════════════════════════════════
+
+    validate [
+        class="opus",
+        label="Validate: Full QA Pass",
+        timeout="1800s",
+        prompt="You are a validation agent. Goal: $goal
+
+Read the latest logs/plan/PLAN-*.md to understand what was planned.
+Read the latest logs/breakdown/BREAKDOWN-*.md to understand what was intended.
+Read the latest logs/implement/PROGRESS-*.md to understand what was actually completed (and what failed or was skipped).
+
+Check for existing validation runs at logs/validate/. If previous runs exist, focus on previously failing items while checking for regressions.
+
+Execute full validation:
+
+1. **Build verification**
+   - swift build --target CoppermindCore --target CoppermindMac
+   - swift build --target CoppermindTests && swift test --skip-build
+
+2. **Categorization engine tests**
+   - Ideas: 'I wonder if consciousness is emergent' → idea
+   - Tasks: 'Call the dentist tomorrow' → task
+   - Projects: 'Build a weather app for my mom' → project
+   - Bucket: 'Buy groceries', 'Read Dune', 'Visit Tokyo', 'https://example.com' → bucket
+   - Edge cases: 'Buy groceries' must NOT be task
+
+3. **Connection engine tests**
+   - Two notes about 'Swift programming' should connect
+   - Notes in different categories with shared themes should connect
+   - Unrelated notes should NOT connect
+
+4. **Priority ranking tests**
+   - Tasks rank above non-tasks at equal recency
+   - Overdue tasks rank highest
+   - Pinned items get a boost
+   - Ranking is stable (same input → same output)
+
+5. **Audio pipeline tests**
+   - AudioRecorder protocol exists and is testable
+   - TranscriptionService processes audio data
+   - Pipeline produces a Note with correct category
+
+6. **macOS UI verification**
+   - App builds and launches
+   - Sidebar shows all category filters and smart groups
+   - Note creation works
+   - Audio recording trigger exists in UI
+   - Connections panel accessible
+
+7. **iOS UI verification**
+   - App builds for simulator
+   - Create-note button exists and works
+   - Audio capture overlay accessible
+   - Priority feed shows ranked notes
+
+Write results to logs/validate/VALIDATION-RUN-{N}.md where N is the next sequential run number.
+
+Include a comparison section if prior validation runs exist:
+- Items that were FAIL and are now PASS (fixed)
+- Items that were PASS and are now FAIL (regressions)
+- Items that remain FAIL (persistent issues)
+- New items not in prior runs
+
+Outcome:
+- SUCCESS if all critical tests pass
+- FAIL with specific failure details if any test fails"
+    ]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  PHASE 5: CRITIQUE (GPT 5.2 harsh → Opus pareto → human gate)
+    //  Adversarial review, then Pareto-optimal distillation.
+    //
+    //  Artifacts:
+    //    logs/critique/CRITIQUE-HARSH-{N}.md  — adversarial review
+    //    logs/critique/CRITIQUE-PARETO-{N}.md — filtered actionable items
+    //
+    //  Resumability: numbered so each critique loop produces new artifacts
+    //  rather than overwriting prior analysis.
+    // ═══════════════════════════════════════════════════════════════════
+
+    critique_harsh [
+        class="gpt",
+        label="Critique: Tear It Down",
+        prompt="You are a harsh code reviewer. Find every weakness in this personal note management app.
+
+Read:
+- The latest logs/plan/PLAN-*.md
+- The latest logs/breakdown/BREAKDOWN-*.md
+- The latest logs/implement/PROGRESS-*.md (what was actually done)
+- The latest logs/validate/VALIDATION-RUN-*.md (validation results)
+- All source code files that were created or modified (listed in the progress log)
+
+If prior critique runs exist at logs/critique/CRITIQUE-PARETO-*.md, read the latest — check whether previously identified MUST FIX and SHOULD FIX items were actually addressed.
+
+Write a brutal critique covering:
+1. Correctness — does categorization actually work? Are edge cases handled?
+2. Data integrity — can notes be lost? Are SwiftData relationships correct?
+3. Audio pipeline — does it handle permissions, interruptions, failures?
+4. UI completeness — are there dead buttons, missing states, broken navigation?
+5. Priority ranking — is the formula sensible? Can it produce nonsensical rankings?
+6. Connection engine — false positives? Missing connections? Performance with many notes?
+7. Platform differences — does something work on macOS but break on iOS or vice versa?
+8. Test coverage — what is NOT tested?
+9. Accessibility — VoiceOver, Dynamic Type, keyboard navigation
+10. Error states — what happens when audio permission is denied? When transcription fails?
+11. Unresolved items — anything from prior critiques that was NOT fixed
+
+Be specific. Reference exact files, functions, and line numbers.
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+
+Write to logs/critique/CRITIQUE-HARSH-{N}.md where N is the next sequential number."
+    ]
+
+    critique_pareto [
+        class="opus",
+        label="Critique: Pareto Optimal Changes",
+        prompt="Read the latest logs/critique/CRITIQUE-HARSH-*.md.
+
+This was a deliberately adversarial review. Extract signal from noise.
+
+Apply Pareto analysis — the 20%% of changes yielding 80%% of improvement:
+
+- **MUST FIX** — Bugs, data loss risks, broken features. Blocks shipping.
+- **SHOULD FIX** — Significant quality improvements worth the effort.
+- **NICE TO HAVE** — Valid but low-impact. Not worth a loop.
+- **REJECT** — Overly aggressive, stylistic, or premature optimization. Explain why.
+
+For each MUST FIX and SHOULD FIX:
+1. Specific file and location
+2. What to change
+3. Why it matters
+
+If zero MUST FIX and zero SHOULD FIX: 'No changes required. Ready to ship.'
+
+IMPORTANT: For files over 100 lines, use the bash tool with a heredoc instead of write_file.
+
+Write to logs/critique/CRITIQUE-PARETO-{N}.md where N matches the CRITIQUE-HARSH number."
+    ]
+
+    critique_gate [
+        shape=hexagon,
+        label="Ship or implement changes?"
+    ]
+
+    // ═══════════════════════════════════════════════════════════════════
+    //  EDGES
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Phase 1: Orient → Plan → Interview
+    start -> orient
+    orient -> plan
+    plan -> interview
+    interview -> plan      [label="revise"]
+    interview -> breakdown  [label="approve"]
+
+    // Phase 2: Break Down → Review
+    breakdown -> review_breakdown
+    review_breakdown -> breakdown [label="revise"]
+    review_breakdown -> implement [label="approve"]
+
+    // Phase 3: Implement → Validate
+    implement -> validate
+
+    // Phase 4: Validate gates progress
+    validate -> critique_harsh [condition="outcome=success"]
+    validate -> plan           [condition="outcome=fail", label="Fix needed"]
+
+    // Phase 5: Critique pipeline → human decision
+    critique_harsh -> critique_pareto
+    critique_pareto -> critique_gate
+    critique_gate -> exit [label="ship it"]
+    critique_gate -> plan [label="implement changes"]
+}
