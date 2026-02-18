@@ -1,10 +1,14 @@
-// CoppermindIOS – Stub entry point
-import Foundation
+// CoppermindIOS – iOS App Entry Point
+import SwiftUI
+import SwiftData
 import CoppermindCore
 
 @main
-struct CoppermindIOSApp {
-    static func main() {
-        print("Coppermind iOS — not yet implemented")
+struct CoppermindIOSApp: App {
+    var body: some Scene {
+        WindowGroup {
+            HomeView()
+        }
+        .modelContainer(for: [Note.self, Connection.self, AudioRecording.self, NoteGroup.self])
     }
 }

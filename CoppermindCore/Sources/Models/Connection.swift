@@ -19,11 +19,10 @@ public enum ConnectionCreator: String, Codable, Sendable {
 /// A weighted, typed edge connecting two notes.
 /// Connections may be user-created or discovered automatically by the embedding pipeline.
 @Model
-public final class Connection: Sendable {
+public final class Connection {
 
     // MARK: - Persisted Properties
 
-    @Attribute(.unique)
     public var id: UUID
 
     /// The note this connection originates from.

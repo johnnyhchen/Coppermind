@@ -31,8 +31,7 @@ let package = Package(
             dependencies: [],
             path: "CoppermindCore/Sources",
             swiftSettings: [
-                .swiftLanguageMode(.v6),
-                .enableExperimentalFeature("StrictConcurrency"),
+                .swiftLanguageMode(.v5),
             ]
         ),
         .executableTarget(
@@ -40,8 +39,7 @@ let package = Package(
             dependencies: ["CoppermindCore"],
             path: "CoppermindMac/Sources",
             swiftSettings: [
-                .swiftLanguageMode(.v6),
-                .enableExperimentalFeature("StrictConcurrency"),
+                .swiftLanguageMode(.v5),
             ]
         ),
         .executableTarget(
@@ -49,8 +47,7 @@ let package = Package(
             dependencies: ["CoppermindCore"],
             path: "CoppermindIOS/Sources",
             swiftSettings: [
-                .swiftLanguageMode(.v6),
-                .enableExperimentalFeature("StrictConcurrency"),
+                .swiftLanguageMode(.v5),
             ]
         ),
         .testTarget(
@@ -58,7 +55,7 @@ let package = Package(
             dependencies: ["CoppermindCore"],
             path: "CoppermindTests/Sources",
             swiftSettings: [
-                .swiftLanguageMode(.v6),
+                .swiftLanguageMode(.v5),
             ]
         ),
     ]

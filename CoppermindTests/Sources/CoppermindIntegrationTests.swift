@@ -8,7 +8,7 @@ import Testing
 // MARK: - Mock Audio Infrastructure
 
 /// Mock recorder that returns a pre-built AudioRecording.
-struct MockAudioRecorder: AudioRecorder {
+struct MockAudioRecorder: AudioRecorderProtocol {
     let stubRecording: AudioRecording
 
     func record() async throws -> AudioRecording {
@@ -134,7 +134,7 @@ struct AudioFlowTests {
 // MARK: - Test 3: Connection Discovery
 
 @Suite("Test 3 – Connection discovery by keyword overlap")
-struct ConnectionTests {
+struct KeywordConnectionTests {
 
     @Test("Swift-related notes are connected by keyword overlap")
     func swiftNotesConnected() {

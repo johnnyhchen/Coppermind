@@ -67,7 +67,7 @@ struct CoppermindIntegrationTests {
         // Accept either idea or project category heuristically
         #expect([.idea, .project].contains(result.category))
         #expect(note.audioRecordings.count == 1)
-        #expect(note.audioRecordings.first?.note.id == note.id)
+        #expect(note.audioRecordings.first?.note?.id == note.id)
     }
 
     // ───────────────────────────────────────────────────────────────────

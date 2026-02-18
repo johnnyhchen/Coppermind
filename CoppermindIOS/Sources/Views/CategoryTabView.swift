@@ -416,7 +416,7 @@ struct CategoryNoteRow: View {
                         .foregroundStyle(urgencyColor(urgency))
                 }
                 if let due = note.dueDate {
-                    Label(due, format: .dateTime.month(.abbreviated).day())
+                    Text(due, format: .dateTime.month(.abbreviated).day())
                         .font(.caption2)
                         .foregroundStyle(note.isOverdue ? .red : .secondary)
                 }

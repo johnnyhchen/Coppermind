@@ -92,11 +92,10 @@ public enum BucketType: String, Codable, Sendable, CaseIterable {
 /// Supports rich text, categorization, priority scoring, and relational connections.
 /// Task and bucket semantics are expressed as optional properties on the unified Note model.
 @Model
-public final class Note: Sendable {
+public final class Note {
 
     // MARK: - Core Properties
 
-    @Attribute(.unique)
     public var id: UUID
 
     public var title: String
@@ -149,6 +148,13 @@ public final class Note: Sendable {
     /// Location description for a bucket-type note.
     public var location: String?
 
+    // MARK: - Engine Compatibility (stored)
+
+    public var connectionIDs: [UUID] = []
+    public var clusterName: String?
+    public var userOverrodeCategory: Bool = false
+    public var audioRecordingID: UUID?
+
     // MARK: - Relationships
 
     @Relationship(deleteRule: .cascade, inverse: \Connection.sourceNote)
@@ -183,7 +189,11 @@ public final class Note: Sendable {
         url: String? = nil,
         bucketType: BucketType? = nil,
         estimatedPrice: Double? = nil,
-        location: String? = nil
+        location: String? = nil,
+        connectionIDs: [UUID] = [],
+        clusterName: String? = nil,
+        userOverrodeCategory: Bool = false,
+        audioRecordingID: UUID? = nil
     ) {
         self.id = id
         self.title = title
@@ -207,11 +217,47 @@ public final class Note: Sendable {
         self.bucketType = bucketType
         self.estimatedPrice = estimatedPrice
         self.location = location
+        // Engine compatibility
+        self.connectionIDs = connectionIDs
+        self.clusterName = clusterName
+        self.userOverrodeCategory = userOverrodeCategory
+        self.audioRecordingID = audioRecordingID
         // Relationships
         self.outgoingConnections = []
         self.incomingConnections = []
         self.audioRecordings = []
         self.groups = []
+    }
+
+    public convenience init(
+        text: String,
+        category: NoteCategory = .idea,
+        priority: Double = 0.0,
+        createdAt: Date = Date(),
+        deadline: Date? = nil,
+        connectionIDs: [UUID] = [],
+        audioRecordingID: UUID? = nil
+    ) {
+        self.init(body: text, category: category, priorityScore: priority, dueDate: deadline,
+                  connectionIDs: connectionIDs, audioRecordingID: audioRecordingID)
+        self.createdAt = createdAt
+    }
+
+    // MARK: - Computed Properties (Engine Aliases)
+
+    public var text: String {
+        get { body }
+        set { body = newValue }
+    }
+
+    public var priority: Double {
+        get { priorityScore }
+        set { priorityScore = newValue }
+    }
+
+    public var deadline: Date? {
+        get { dueDate }
+        set { dueDate = newValue }
     }
 
     // MARK: - Computed Properties
@@ -270,4 +316,10 @@ public final class Note: Sendable {
         guard isTask, let dueDate, isCompleted != true else { return false }
         return dueDate < Date.now
     }
+}
+
+// MARK: - Notification Names
+
+public extension Notification.Name {
+    static let newNote = Notification.Name("com.coppermind.newNote")
 }

@@ -7,11 +7,10 @@ import SwiftData
 /// A group of notes that have been clustered together by semantic similarity
 /// or manually organized by the user.
 @Model
-public final class NoteGroup: Sendable {
+public final class NoteGroup {
 
     // MARK: - Persisted Properties
 
-    @Attribute(.unique)
     public var id: UUID
 
     public var name: String

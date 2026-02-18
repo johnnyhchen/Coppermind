@@ -6,7 +6,7 @@ import Foundation
 // MARK: - Protocols
 
 /// Records audio from the microphone and returns an AudioRecording.
-public protocol AudioRecorder: Sendable {
+public protocol AudioRecorderProtocol: Sendable {
     func record() async throws -> AudioRecording
 }
 
@@ -19,12 +19,12 @@ public protocol AudioTranscriber: Sendable {
 
 /// Orchestrates the full voice-note capture flow.
 public struct AudioPipeline: Sendable {
-    private let recorder: AudioRecorder
+    private let recorder: AudioRecorderProtocol
     private let transcriber: AudioTranscriber
     private let engine: CategorizationEngine
 
     public init(
-        recorder: AudioRecorder,
+        recorder: AudioRecorderProtocol,
         transcriber: AudioTranscriber,
         engine: CategorizationEngine = CategorizationEngine()
     ) {

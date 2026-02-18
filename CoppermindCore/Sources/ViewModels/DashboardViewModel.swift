@@ -136,8 +136,9 @@ public final class DashboardViewModel {
 
     private func loadPendingAudioNotes() throws -> [Note] {
         // TODO: Fetch audio-source notes that may need transcription review.
+        let audioSource = NoteSource.audio
         let descriptor = FetchDescriptor<Note>(
-            predicate: #Predicate { $0.source == .audio && !$0.isArchived },
+            predicate: #Predicate { $0.source == audioSource && !$0.isArchived },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try modelContext.fetch(descriptor)

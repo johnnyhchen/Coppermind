@@ -309,7 +309,7 @@ struct HomeFeedCard: View {
             HStack(spacing: 8) {
                 categoryChip
                 if note.isTask, let due = note.dueDate {
-                    Label(due, format: .dateTime.month(.abbreviated).day())
+                    Text(due, format: .dateTime.month(.abbreviated).day())
                         .font(.caption2)
                         .foregroundStyle(note.isOverdue ? .red : .secondary)
                 }

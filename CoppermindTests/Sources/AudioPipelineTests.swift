@@ -3,6 +3,7 @@
 
 import Testing
 import Foundation
+import SwiftData
 @testable import CoppermindCore
 
 // MARK: - AudioRecorder Tests
@@ -253,7 +254,7 @@ struct TranscriptionServiceTests {
 
     @Test("Default configuration uses Apple backend")
     func defaultConfig() async {
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let status = await service.authorizationStatus()
         // Authorization status depends on environment — just verify no crash
         _ = status
@@ -478,7 +479,7 @@ struct AudioCaptureViewModelTests {
     @Test("Initial phase is idle")
     @MainActor func initialPhase() async {
         let recorder = AudioRecorder()
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let container = try! ModelContainer(
             for: Note.self, AudioRecording.self, Connection.self, NoteGroup.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -501,7 +502,7 @@ struct AudioCaptureViewModelTests {
     @Test("Reset clears all state")
     @MainActor func resetClearsState() async {
         let recorder = AudioRecorder()
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let container = try! ModelContainer(
             for: Note.self, AudioRecording.self, Connection.self, NoteGroup.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -536,7 +537,7 @@ struct AudioCaptureViewModelTests {
     @Test("Generate title from short text")
     @MainActor func generateTitleShortText() async {
         let recorder = AudioRecorder()
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let container = try! ModelContainer(
             for: Note.self, AudioRecording.self, Connection.self, NoteGroup.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -570,7 +571,7 @@ struct AudioCaptureViewModelTests {
     @Test("hasLowConfidenceSegments reflects transcription data")
     @MainActor func lowConfidenceReflection() async {
         let recorder = AudioRecorder()
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let container = try! ModelContainer(
             for: Note.self, AudioRecording.self, Connection.self, NoteGroup.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -608,7 +609,7 @@ struct AudioCaptureViewModelTests {
     @Test("Cannot create note from non-transcribed phase")
     @MainActor func createNoteRequiresTranscribedPhase() async {
         let recorder = AudioRecorder()
-        let service = TranscriptionService()
+        let service = TranscriptionService(backend: AppleSpeechTranscriber())
         let container = try! ModelContainer(
             for: Note.self, AudioRecording.self, Connection.self, NoteGroup.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)

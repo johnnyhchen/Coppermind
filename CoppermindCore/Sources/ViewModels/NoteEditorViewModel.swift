@@ -37,7 +37,7 @@ public final class NoteEditorViewModel {
 
     private let modelContext: ModelContext
     private let classifier: CategoryClassifier
-    private var autoSaveTask: Task<Void, Never>?
+    nonisolated(unsafe) private var autoSaveTask: Task<Void, Never>?
 
     // MARK: - Init
 

@@ -6,15 +6,14 @@ import SwiftData
 
 /// Metadata for an audio recording attached to a note, including transcription state.
 @Model
-public final class AudioRecording: Sendable {
+public final class AudioRecording {
 
     // MARK: - Persisted Properties
 
-    @Attribute(.unique)
     public var id: UUID
 
     /// The note this recording is attached to.
-    public var note: Note
+    public var note: Note?
 
     /// Relative file path within the app's audio storage directory.
     public var filePath: String
@@ -37,7 +36,7 @@ public final class AudioRecording: Sendable {
 
     public init(
         id: UUID = UUID(),
-        note: Note,
+        note: Note? = nil,
         filePath: String,
         duration: TimeInterval = 0,
         transcriptionText: String? = nil,
@@ -52,6 +51,17 @@ public final class AudioRecording: Sendable {
         self.transcriptionConfidence = transcriptionConfidence
         self.isEdited = isEdited
         self.createdAt = Date.now
+    }
+
+    public convenience init(fileURL: URL, duration: TimeInterval) {
+        self.init(note: nil, filePath: fileURL.path, duration: duration)
+    }
+
+    // MARK: - Engine Aliases
+
+    public var transcription: String? {
+        get { transcriptionText }
+        set { transcriptionText = newValue }
     }
 
     // MARK: - Convenience
