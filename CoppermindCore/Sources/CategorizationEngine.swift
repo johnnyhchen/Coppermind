@@ -14,9 +14,19 @@ public struct CategorizationEngine: Sendable {
     public func categorize(_ text: String) -> (category: NoteCategory, priority: Double) {
         let lower = text.lowercased()
 
-        if matchesTask(lower) {
+        let bucketMatch = matchesBucket(lower)
+        let taskMatch = matchesTask(lower)
+
+        if bucketMatch && !taskMatch {
+            return (.bucket, 10)
+        }
+        if taskMatch && !bucketMatch {
             let priority = taskPriority(lower)
             return (.task, priority)
+        }
+        if bucketMatch && taskMatch {
+            let priority = taskPriority(lower)
+            return priority >= 70 ? (.task, priority) : (.bucket, 10)
         }
         if matchesProject(lower) {
             return (.project, 40)
@@ -32,9 +42,14 @@ public struct CategorizationEngine: Sendable {
     private static let taskVerbs: [String] = [
         "need to", "must", "have to", "should",
         "finish", "complete", "submit", "deliver",
-        "pick up", "buy", "schedule", "call",
+        "pick up", "schedule", "call",
         "fix", "resolve", "review", "send",
         "prepare", "clean", "organize"
+    ]
+
+    private static let bucketVerbs: [String] = [
+        "buy", "order", "visit", "read", "watch",
+        "listen to", "check out", "look into", "bookmark"
     ]
 
     private static let deadlineSignals: [String] = [
@@ -50,6 +65,10 @@ public struct CategorizationEngine: Sendable {
         let hasVerb = Self.taskVerbs.contains { text.contains($0) }
         let hasDeadline = Self.deadlineSignals.contains { text.contains($0) }
         return hasVerb || hasDeadline
+    }
+
+    private func matchesBucket(_ text: String) -> Bool {
+        Self.bucketVerbs.contains { text.contains($0) }
     }
 
     private func taskPriority(_ text: String) -> Double {
