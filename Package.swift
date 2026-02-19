@@ -51,9 +51,33 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "CoppermindTests",
+            name: "CoppermindCoreTests",
             dependencies: ["CoppermindCore"],
-            path: "CoppermindTests/Sources",
+            path: "CoppermindTests/CoreTests",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ]
+        ),
+        .testTarget(
+            name: "CoppermindAudioTests",
+            dependencies: ["CoppermindCore"],
+            path: "CoppermindTests/AudioTests",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ]
+        ),
+        .testTarget(
+            name: "CoppermindEngineTests",
+            dependencies: ["CoppermindCore"],
+            path: "CoppermindTests/EngineTests",
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+            ]
+        ),
+        .testTarget(
+            name: "CoppermindIntegrationTests",
+            dependencies: ["CoppermindCore"],
+            path: "CoppermindTests/IntegrationTests",
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ]
