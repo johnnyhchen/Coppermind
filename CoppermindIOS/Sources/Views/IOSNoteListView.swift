@@ -99,6 +99,7 @@ struct IOSNoteListView: View {
                 IOSNoteDetailView(note: note)
             }
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Picker("Sort", selection: $selectedSort) {
@@ -114,7 +115,25 @@ struct IOSNoteListView: View {
                         Image(systemName: "line.3.horizontal.decrease.circle")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Menu {
+                        Picker("Sort", selection: $selectedSort) {
+                            ForEach(SortOption.allCases, id: \.self) { option in
+                                Text(option.rawValue)
+                            }
+                        }
 
+                        Divider()
+
+                        Toggle("Show Archived", isOn: $showArchived)
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                    }
+                }
+                #endif
+
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         createNote()
@@ -122,6 +141,15 @@ struct IOSNoteListView: View {
                         Image(systemName: "plus")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        createNote()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+                #endif
             }
             .overlay {
                 if filteredNotes.isEmpty {
@@ -144,6 +172,7 @@ struct IOSNoteListView: View {
     private func createNote() {
         let note = Note(title: "", body: "", source: .typed)
         modelContext.insert(note)
+        try? modelContext.save()
     }
 }
 

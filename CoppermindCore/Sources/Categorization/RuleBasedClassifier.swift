@@ -147,6 +147,22 @@ public struct RuleBasedClassifier: Sendable {
             (#"\bfollow up\b"#,       0.75),
             (#"- ?\[ ?\]"#,           0.90),   // Markdown checkbox
             (#"\breminder\b"#,        0.70),
+            // Imperative action verbs
+            (#"\bpick up\b"#,          0.80),
+            (#"\bfinish\b"#,           0.75),
+            (#"\bcomplete\b"#,         0.75),
+            (#"\bsubmit\b"#,           0.80),
+            (#"\bdeliver\b"#,          0.75),
+            (#"\bschedule\b"#,         0.75),
+            (#"\bresolve\b"#,          0.75),
+            (#"\breview\b"#,           0.70),
+            (#"\bprepare\b"#,          0.70),
+            (#"\bclean\b"#,            0.65),
+            (#"\borganize\b"#,         0.70),
+            (#"\bfix\b"#,              0.75),
+            (#"\bcall\b"#,             0.70),
+            (#"\bsend\b"#,             0.75),
+            (#"\bemail\b"#,            0.70),
         ]
 
         var bestConfidence = 0.0

@@ -76,23 +76,32 @@ struct IOSNoteDetailView: View {
             .padding()
         }
         .navigationTitle(note.title.isEmpty ? "Untitled" : note.title)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
+            #if os(iOS)
             // Leading: category button
             ToolbarItem(placement: .topBarLeading) {
                 categoryButton
             }
-
             // Trailing: priority, share, more
             ToolbarItemGroup(placement: .topBarTrailing) {
                 toolbarItems
             }
-
             // Keyboard done
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") { isBodyFocused = false }
             }
+            #else
+            ToolbarItem(placement: .automatic) {
+                categoryButton
+            }
+            ToolbarItemGroup(placement: .automatic) {
+                toolbarItems
+            }
+            #endif
         }
         .confirmationDialog("Delete Note?", isPresented: $showDeleteConfirmation) {
             Button("Delete", role: .destructive) {
@@ -405,7 +414,9 @@ struct IOSNoteDetailView: View {
                 .buttonStyle(.plain)
             }
             .navigationTitle("Category")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Done") { showCategoryPicker = false }
@@ -516,7 +527,11 @@ struct AudioPlayerCard: View {
                     .foregroundStyle(.secondary)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    #if os(iOS)
                     .background(Color(.systemGray6))
+                    #else
+                    .background(Color.gray.opacity(0.15))
+                    #endif
                     .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }

@@ -91,7 +91,9 @@ struct AudioCaptureOverlayView: View {
             }
             .padding()
             .navigationTitle("Audio Capture")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -273,7 +275,7 @@ struct AudioCaptureOverlayView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(NoteCategory.allCases, id: \.self) { cat in
+                    ForEach(Array(NoteCategory.allCases), id: \.self) { (cat: NoteCategory) in
                         let isSelected = (selectedCategory ?? suggestedCategory) == cat
                         let isSuggested = cat == suggestedCategory && selectedCategory == nil
 
@@ -292,7 +294,11 @@ struct AudioCaptureOverlayView: View {
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
+                            #if os(iOS)
                             .background(isSelected ? cat.accentColor.opacity(0.2) : Color(.systemGray6))
+                            #else
+                            .background(isSelected ? cat.accentColor.opacity(0.2) : Color.gray.opacity(0.15))
+                            #endif
                             .foregroundStyle(isSelected ? cat.accentColor : .secondary)
                             .clipShape(Capsule())
                             .overlay(

@@ -71,6 +71,7 @@ struct IOSConnectionsView: View {
                 IOSClusterDetailView(group: group)
             }
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         // TODO: Trigger connection discovery
@@ -79,6 +80,16 @@ struct IOSConnectionsView: View {
                     }
                     .help("Discover Connections")
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        // TODO: Trigger connection discovery
+                    } label: {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                    }
+                    .help("Discover Connections")
+                }
+                #endif
             }
         }
     }

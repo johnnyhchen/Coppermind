@@ -1,4 +1,3 @@
-// CategoryTabView.swift — Reusable per-category browsing tab
 // CoppermindIOS
 
 import SwiftUI
@@ -145,14 +144,22 @@ struct CategoryTabView: View {
                 }
             }
             .navigationTitle(category.displayName + "s")
-            .searchable(text: $searchText, prompt: "Search \(category.displayName.lowercased())s\u{2026}")
+            .searchable(text: $searchText, prompt: "Search \(category.displayName.lowercased())s…")
             .navigationDestination(item: $selectedNote) { note in
                 IOSNoteDetailView(note: note)
             }
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     sortMenu
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    sortMenu
+                }
+                #endif
+
+                #if os(iOS)
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         createNote()
@@ -160,6 +167,15 @@ struct CategoryTabView: View {
                         Image(systemName: "plus")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        createNote()
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+                #endif
             }
         }
     }
@@ -204,7 +220,13 @@ struct CategoryTabView: View {
                             .background(
                                 filterOption == option
                                     ? category.accentColor.opacity(0.2)
-                                    : Color(.systemGray6)
+                                    : {
+                                        #if os(iOS)
+                                        Color(.systemGray6)
+                                        #else
+                                        Color.gray.opacity(0.15)
+                                        #endif
+                                    }()
                             )
                             .foregroundStyle(
                                 filterOption == option ? category.accentColor : .secondary
@@ -356,6 +378,7 @@ struct CategoryTabView: View {
             note.bucketType = .other
         }
         modelContext.insert(note)
+        try? modelContext.save()
         selectedNote = note
     }
 
@@ -426,15 +449,14 @@ struct CategoryNoteRow: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
+        .padding(.vertical, 6)
     }
 
     private func urgencyColor(_ urgency: Urgency) -> Color {
         switch urgency {
-        case .high:   return .red
+        case .low: return .green
         case .medium: return .orange
-        case .low:    return .green
+        case .high: return .red
         }
     }
 }
@@ -445,41 +467,36 @@ struct BucketNoteRow: View {
     let note: Note
 
     var body: some View {
-        HStack(spacing: 12) {
-            if note.isStarred {
-                Image(systemName: "star.fill")
-                    .font(.caption)
-                    .foregroundStyle(.yellow)
-            }
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
                 Text(note.title.isEmpty ? "Untitled" : note.title)
                     .font(.headline)
-                    .lineLimit(1)
-                if let url = note.url, !url.isEmpty {
-                    Text(url)
-                        .font(.caption)
-                        .foregroundStyle(.blue)
-                        .lineLimit(1)
+                Spacer()
+                if note.isStarred {
+                    Image(systemName: "star.fill")
+                        .foregroundStyle(.yellow)
                 }
-                HStack(spacing: 8) {
-                    if let price = note.estimatedPrice, price > 0 {
-                        Text(price, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    if let loc = note.location, !loc.isEmpty {
-                        Label(loc, systemImage: "mappin")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    Spacer()
-                    Text(note.updatedAt, style: .relative)
+            }
+
+            if !note.body.isEmpty {
+                Text(note.body)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+
+            HStack {
+                Text(note.updatedAt, style: .relative)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                Spacer()
+                if let type = note.bucketType {
+                    Text(type.rawValue.capitalized)
                         .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 }
